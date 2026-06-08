@@ -1,5 +1,5 @@
 \documentclass[aspectratio=169]{beamer}
-\usepackage[T1]{fontenc} 
+\usepackage[T1]{fontenc}
 \usepackage[default]{sourcesanspro}
 \usepackage{newtxsf}
 \usepackage{hyperref}
@@ -19,11 +19,11 @@
 
 \author{Yan Lin}
 \title{AI Systems \& Infrastructure}
-\subtitle{MODULE NAME}
+\subtitle{Module A.2: Interacting with APIs in Python}
 \institute{%
     \href{https://www.yanlincs.com}{www.yanlincs.com}
 }
-\date{DATE}
+\date{September 1st, 2026}
 \usepackage{AAU}
 % \AtBeginSection{}  % Remove section title slides
 \AtBeginSubsection{}  % Remove subsection title slides
@@ -42,7 +42,7 @@
 \setbeamercolor{normal text}{fg=textgrey}
 \usebeamercolor[fg]{normal text}
 
-\def\emphasis#1{\color{aaured}#1}
+\def\emphasis#1{{\color{aaured}\textbf{#1}}}
 \renewcommand{\thefootnote}{}
 
 
@@ -57,7 +57,7 @@
     frame=shadowbox,
 }
 
-%- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- 
+%- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 \begin{document}
 
 \begin{frame}[plain,noframenumbering]
@@ -70,18 +70,398 @@
     \end{figure}
 \end{frame}
 
-\begin{frame}    
+\begin{frame}
 \tableofcontents[sectionstyle=show,
 subsectionstyle=show/shaded/hide,
 subsubsectionstyle=show/shaded/hide]
 \end{frame}
 
 
-\section{}
+\section{From Testing Tool to Python}
 
-\begin{frame}{}
+\begin{frame}{Recap: where we are}
+In Module A.1 we treated APIs as something to \textit{poke at through browsers and API testing tools}.
+    Great for getting a feel for what HTTP traffic looks like.
+
+\vspace{0.5em}
+    However, we do not usually ship software in the form of \textit{open Postman and click send}.
+Sooner or later, we want \textbf{our own programs to talk to APIs on their own}.
 \end{frame}
 
+\begin{frame}{Why \texttt{requests}}
+    Python has a built-in HTTP module (\texttt{urllib}), and AI providers ship their own Python packages such as \texttt{openai} and \texttt{anthropic}.
+
+    \begin{block}{\texttt{urllib}}
+        Built in, but somewhat clunky and verbose.
+        Most Python developers reach for \texttt{requests} instead.
+    \end{block}
+
+    \begin{block}{Provider SDKs}
+        Yes for shipping production code, but not for learning.
+        \begin{itemize}
+            \item SDKs hide the HTTP details we just got familiar with
+            \item Errors use the SDK's own wording instead of HTTP terms
+            \item Switching providers feels like learning a brand new tool
+        \end{itemize}
+    \end{block}
+
+    Working with \texttt{requests} keeps the HTTP layer visible while still relatively intuitive for us.
+\end{frame}
+
+\begin{frame}[fragile]{Setup}
+    \texttt{requests} is a third-party package.
+    \begin{minted}{bash}
+pip install requests
+    \end{minted}
+
+    \vspace{0.5em}
+    \emphasis{Tip.} It is a good idea to install \texttt{requests} inside a virtual environment, instead of polluting your system-level Python.
+    Otherwise tracking down version conflicts later becomes a headache.
+    \begin{minted}{bash}
+python -m venv .venv
+source .venv/bin/activate
+pip install requests
+    \end{minted}
+\end{frame}
+
+
+\section{Sending HTTP Requests}
+
+\begin{frame}{From HTTP request to Python call}
+Recall the three parts of an HTTP request: request line (method, URL, and protocol version), headers, and body.
+
+    \begin{itemize}
+        \item \texttt{requests} has one function per HTTP method, like \texttt{requests.get} and \texttt{requests.post}
+        \item URL passes as the first argument
+        \item Headers and body pass as keyword arguments
+        \item Protocol version is chosen for us
+    \end{itemize}
+
+    \vspace{0.5em}
+    Same building blocks as Postman, just expressed in Python.
+\end{frame}
+
+\begin{frame}[fragile]{Sending a \texttt{GET} request}
+    \begin{minted}{python}
+import requests
+
+url = "https://api.openai.com/v1/models"
+headers = {
+    "Authorization": "Bearer sk-abc1234567890qwerty",
+    "Accept": "application/json",
+    "User-Agent": "SomeAIApp/1.0",
+}
+
+response = requests.get(url, headers=headers)
+print(response.status_code)
+print(response.json())
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]{Sending a \texttt{POST} request}
+    \begin{minted}{python}
+url = "https://api.openai.com/v1/chat/completions"
+headers = {
+    "Authorization": "Bearer sk-abc1234567890qwerty",
+    "Content-Type": "application/json",
+}
+body = {
+    "model": "gpt-5.4-mini",
+    "messages": [{"role": "user",
+                  "content": "Write a haiku about APIs."}],
+    "temperature": 0.7,
+}
+
+response = requests.post(url, headers=headers, json=body)
+    \end{minted}
+\end{frame}
+
+
+\section{Handling HTTP Responses}
+
+\begin{frame}[fragile]{The response object}
+    The \texttt{response} object exposes all three parts of the HTTP response.
+
+    \begin{minted}{python}
+response.status_code   # 200, 401, 500, ...
+response.reason        # "OK", "Not Found", ...
+response.ok            # True if status < 400
+
+response.headers["Content-Type"]   # like a Python dict
+
+response.text     # body as a string
+response.content  # body as raw bytes
+response.json()   # body parsed from JSON to a Python dict
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]{Reading the response body}
+    Once we parsed the response body into Python dict, the rest is normal Python.
+    \begin{minted}{python}
+result = response.json()
+print(result["choices"][0]["message"]["content"])
+    \end{minted}
+
+    \vspace{0.5em}
+    \begin{itemize}
+        \item The field names depend on the API
+        \item OpenAI's response API uses \texttt{output\_text}, the chat completions API uses \texttt{choices[0].message.content}
+        \item Always check the provider's documentation for the exact shape
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Error handling: two kinds of failure}
+    So far we have assumed everything goes smoothly.
+    In practice many things can go wrong, and \texttt{requests} signals failures in two ways.
+
+    \begin{block}{Network-level failures}
+        Connection refused, DNS error, timeout. The request failed to reach the server.
+        \begin{itemize}
+            \item \texttt{requests} raises exceptions from \texttt{requests.exceptions}
+            \item Base class is \texttt{RequestException}, a catch-all for anything network-related
+        \end{itemize}
+    \end{block}
+
+    \begin{block}{HTTP-level failures}
+        The request reaches the server, but the server responds with a \texttt{4xx} or \texttt{5xx} status code.
+        \begin{itemize}
+            \item No exception by default
+            \item Check \texttt{response.status\_code} ourselves, or call \texttt{response.raise\_for\_status()}
+        \end{itemize}
+    \end{block}
+\end{frame}
+
+\begin{frame}[fragile]{Putting it together}
+    \begin{minted}{python}
+try:
+    response = requests.post(url, headers=headers, json=body, timeout=30)
+    response.raise_for_status()
+    result = response.json()
+    print(result["choices"][0]["message"]["content"])
+except requests.exceptions.Timeout:
+    print("The API took too long to respond.")
+except requests.exceptions.HTTPError as e:
+    print(f"The API returned an error: {e}")
+    print(f"Body: {response.text}")
+except requests.exceptions.RequestException as e:
+    print(f"Request failed: {e}")
+    \end{minted}
+
+    Different errors often deserve different treatment.
+For example, a timeout might be worth retrying, while a \texttt{401} from a bad API key is not.
+\end{frame}
+
+
+\section{Beyond the Basics}
+
+\begin{frame}{Three common patterns}
+Good practices that we should consider when integrating AI API interaction into a real program.
+
+    \begin{itemize}
+\item Keeping \textbf{API keys} out of source code
+\item Sending \textbf{images} to AI APIs that accept them
+\item Receiving \textbf{streamed responses}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Storing API keys in environment variables}
+    \begin{block}{Why not hardcode API keys in code?}
+\begin{enumerate}
+\item API keys give whoever holds them access to your account and billing, so they should be \textbf{treated like passwords}
+\item \textit{Hardcoded keys leak}. People commit them to public repos, paste them in Slack, screenshot them in tutorials
+\item Bots scan public commits, and stolen keys can be \textit{running up bills} on your account within minutes
+\end{enumerate}
+    \end{block}
+\end{frame}
+
+\begin{frame}[fragile]{Storing API keys in environment variables}
+    \begin{block}{Write environment variables}
+        \begin{minted}{bash}
+export OPENAI_API_KEY="sk-abc1234567890qwerty"
+        \end{minted}
+    \end{block}
+
+    \begin{block}{Read environment variables}
+        \begin{minted}{python}
+import os
+headers = {
+    "Authorization": f"Bearer {os.getenv('OPENAI_API_KEY')}",
+}
+        \end{minted}
+    \end{block}
+
+    For projects with many secrets: a \texttt{.env} file plus \texttt{python-dotenv}.
+\end{frame}
+
+\begin{frame}[fragile]{Sending images in the request body}
+    \begin{block}{What's special about fitting images in the body?}
+\begin{enumerate}
+\item Many modern AI chatbot APIs accept images in addition to text.
+\item The catch is that JSON cannot directly hold raw image bytes.
+\item The standard workaround is to encode the image into a Base64 string.
+\end{enumerate}
+    \end{block}
+\end{frame}
+
+\begin{frame}[fragile]{Encode images as strings}
+    \begin{minted}{python}
+import base64
+from io import BytesIO
+from PIL import Image
+
+image = Image.open("cat.jpg")
+image.thumbnail((1024, 1024))   # most providers cap image size
+
+buffer = BytesIO()
+image.save(buffer, format="JPEG")
+encoded = base64.b64encode(buffer.getvalue()).decode("utf-8")
+    \end{minted}
+
+    Pillow makes it easy to open and resize. \texttt{base64.b64encode} turns the bytes into an ASCII string that fits inside JSON.
+\end{frame}
+
+\begin{frame}[fragile]{Putting the image in the body}
+    \begin{minted}{python}
+body = {
+    "model": "gpt-5.4-mini",
+    "messages": [{
+        "role": "user",
+        "content": [
+            {"type": "text", "text": "What is in this picture?"},
+            {"type": "image_url",
+             "image_url": {"url": f"data:image/jpeg;base64,{encoded}"}},
+        ],
+    }],
+}
+
+response = requests.post(url, headers=headers, json=body)
+    \end{minted}
+
+    The \texttt{data:image/jpeg;base64,} prefix follows the data URL scheme.
+    Each provider has its own preferred way of carrying images.
+\end{frame}
+
+\begin{frame}{Streaming responses with SSE}
+\begin{minipage}[t]{0.47\textwidth}
+\begin{enumerate}
+\item When you chat with ChatGPT or Claude on their web app, the response appears word by word as the model generates it, instead of arriving all at once.
+\item This is achievable through the same APIs, using \emphasis{Server-Sent Events (SSE)} on top of HTTP.
+\item Without streaming, a 30-second answer takes 30 seconds before the user sees anything. With streaming, the first words appear in a second or two.
+\end{enumerate}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.5\textwidth}
+    \begin{figure}[htpb]
+        \begin{center}
+            \includegraphics[width=0.9\textwidth]{streaming-comparison}
+        \end{center}
+    \end{figure}
+\end{minipage}
+
+\end{frame}
+
+\begin{frame}{Server-Sent Events (SSE)}
+SSE is built on top of HTTP.
+
+\begin{enumerate}
+\item Without SSE, the server sends one complete response and closes the connection
+\item With SSE, the server keeps the connection open and writes the response in small chunks as they become ready
+\end{enumerate}
+
+    \begin{figure}[htpb]
+        \begin{center}
+            \includegraphics[width=0.6\textwidth]{sse}
+        \end{center}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{Enabling SSE with \texttt{requests}}
+    To enable SSE with \texttt{requests}, we have to do two things.
+
+\begin{enumerate}
+\item \textbf{Tell the API we want streaming.} The exact mechanism varies by provider, but most use a \texttt{stream: true} field in the body.
+\item \textbf{Tell \texttt{requests} not to buffer.} Pass \texttt{stream=True} to the function so we can read chunks as they arrive.
+\end{enumerate}
+
+\end{frame}
+
+\begin{frame}[fragile]{Reading the response chunk by chunk}
+    \begin{minted}{python}
+body["stream"] = True
+response = requests.post(url, headers=headers, json=body,
+                         stream=True, timeout=60)
+
+for line in response.iter_lines():  # iterate incoming chunks
+    if not line: continue  # empty line
+    line = line.decode("utf-8")
+    if not line.startswith("data: "): continue  # practically empty line
+    payload = line[len("data: "):]
+    if payload == "[DONE]": break  # Stream ends
+    # Extract actual content
+    chunk = json.loads(payload)
+    delta = chunk["choices"][0]["delta"].get("content", "")
+    print(delta, end="", flush=True)
+    \end{minted}
+\end{frame}
+
+\begin{frame}{Other protocols for streaming}
+\begin{minipage}[t]{0.47\textwidth}
+    SSE is not the only protocol AI services use for streaming.
+    Protocols like WebSocket and WebRTC support two-way communication and are widely used in voice and video AI features, including OpenAI's Realtime API and Google's Gemini Live.
+
+    \begin{itemize}
+        \item \texttt{websockets} for WebSocket clients and servers
+        \item \texttt{aiortc} for WebRTC clients and servers
+    \end{itemize}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.5\textwidth}
+    \begin{figure}[htpb]
+        \begin{center}
+            \includegraphics[width=0.8\textwidth]{bidirectional}
+        \end{center}
+    \end{figure}
+\end{minipage}
+\end{frame}
+
+
+\section{Exercise}
+
+\begin{frame}{A command line chatbot}
+    Build a Python program that takes a question from you, sends it to an AI API, and prints the model's reply.
+    Knowledge and resources from Module A.1 exercise can be reused.
+
+    \begin{block}{Outline}
+        \begin{enumerate}
+            \item Read the API key from an environment variable
+            \item Take a question from the command line
+            \item Send a \texttt{POST} request to the provider's AI API
+            \item Parse the response and print the AI model's reply
+            \item Handle common error cases gracefully
+        \end{enumerate}
+    \end{block}
+\end{frame}
+
+\begin{frame}{Extensions}
+    Once the basic version works, try the following to deepen your understanding.
+
+    \begin{enumerate}
+        \item Intentionally trigger errors with an invalid key, a malformed body, or by unplugging the network. Verify the robustness of your program's error handling
+        \item Add a \texttt{-{}-image <path>} flag so the user can attach a local image to send to the AI model
+        \item Replace the regular response handling with a streaming version that prints the reply word by word
+    \end{enumerate}
+\end{frame}
+
+\begin{frame}{What you should walk away with}
+    By the end of the exercise, you should be able to:
+    \begin{enumerate}
+        \item Integrate interaction with most AI systems in the wild into your own program
+        \item Design and implement a real AI client that uses every concept we have covered so far
+    \end{enumerate}
+
+    \vspace{0.5em}
+    In the next module, we will transition from API consumers to API producers.
+\end{frame}
 
 
 \appendix
