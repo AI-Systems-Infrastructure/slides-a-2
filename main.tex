@@ -196,7 +196,7 @@ response.json()   # body parsed from JSON to a Python dict
 \end{frame}
 
 \begin{frame}[fragile]{Reading the response body}
-    Once we parsed the response body into Python dict, the rest is normal Python.
+    Once we parse the response body into a Python dict, the rest is normal Python.
     \begin{minted}{python}
 result = response.json()
 print(result["choices"][0]["message"]["content"])
