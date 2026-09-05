@@ -29,6 +29,11 @@
 \AtBeginSubsection{}  % Remove subsection title slides
 \setbeamertemplate{navigation symbols}{}  % Remove bottom nav tools
 % \setbeamertemplate{headline}{}  % Remove top navbar
+\ifdefined\hidenotes\else
+    \setbeameroption{show notes on second screen=right}
+    \setbeamerfont{note page}{size=\large}
+    \hypersetup{pdfkeywords={SP-Right}}
+\fi
 
 % defs
 \def\cmd#1{\texttt{\color{red}\footnotesize $\backslash$#1}}
@@ -68,6 +73,8 @@
             \includegraphics[keepaspectratio, scale=0.5]{aau-logo-left-uk}
         \end{center}
     \end{figure}
+\note{
+}
 \end{frame}
 
 
@@ -75,6 +82,8 @@
 \tableofcontents[sectionstyle=show,
 subsectionstyle=show/shaded/hide,
 subsubsectionstyle=show/shaded/hide]
+\note{
+}
 \end{frame}
 
 
@@ -88,6 +97,8 @@ In Module A.1 we treated APIs as something to \textit{poke at through browsers a
 \vspace{0.5em}
     However, we do not usually ship software in the form of \textit{open Postman and click send}.
 Sooner or later, we want \textbf{our own programs to talk to APIs on their own}.
+\note{
+}
 \end{frame}
 
 
@@ -109,6 +120,8 @@ Sooner or later, we want \textbf{our own programs to talk to APIs on their own}.
     \end{block}
 
     Working with \texttt{requests} keeps the HTTP layer visible while still relatively intuitive for us.
+\note{
+}
 \end{frame}
 
 
@@ -126,6 +139,8 @@ python -m venv .venv
 source .venv/bin/activate
 pip install requests
     \end{minted}
+\note{
+}
 \end{frame}
 
 
@@ -144,6 +159,8 @@ Recall the three parts of an HTTP request: request line (method, URL, and protoc
 
     \vspace{0.5em}
     Same building blocks as Postman, just expressed in Python.
+\note{
+}
 \end{frame}
 
 
@@ -162,6 +179,8 @@ response = requests.get(url, headers=headers)
 print(response.status_code)
 print(response.json())
     \end{minted}
+\note{
+}
 \end{frame}
 
 
@@ -181,6 +200,8 @@ body = {
 
 response = requests.post(url, headers=headers, json=body)
     \end{minted}
+\note{
+}
 \end{frame}
 
 
@@ -201,6 +222,8 @@ response.text     # body as a string
 response.content  # body as raw bytes
 response.json()   # body parsed from JSON to a Python dict
     \end{minted}
+\note{
+}
 \end{frame}
 
 
@@ -217,6 +240,8 @@ print(result["choices"][0]["message"]["content"])
         \item OpenAI's response API uses \texttt{output\_text}, the chat completions API uses \texttt{choices[0].message.content}
         \item Always check the provider's documentation for the exact shape
     \end{itemize}
+\note{
+}
 \end{frame}
 
 
@@ -239,6 +264,8 @@ print(result["choices"][0]["message"]["content"])
             \item Check \texttt{response.status\_code} ourselves, or call \texttt{response.raise\_for\_status()}
         \end{itemize}
     \end{block}
+\note{
+}
 \end{frame}
 
 
@@ -260,6 +287,8 @@ except requests.exceptions.RequestException as e:
 
     Different errors often deserve different treatment.
 For example, a timeout might be worth retrying, while a \texttt{401} from a bad API key is not.
+\note{
+}
 \end{frame}
 
 
@@ -274,6 +303,8 @@ Good practices that we should consider when integrating AI API interaction into 
 \item Sending \textbf{images} to AI APIs that accept them
 \item Receiving \textbf{streamed responses}
     \end{itemize}
+\note{
+}
 \end{frame}
 
 
@@ -285,6 +316,8 @@ Good practices that we should consider when integrating AI API interaction into 
 \item Bots scan public commits, and stolen keys can be \textit{running up bills} on your account within minutes
 \end{enumerate}
     \end{block}
+\note{
+}
 \end{frame}
 
 
@@ -305,6 +338,8 @@ headers = {
     \end{block}
 
     For projects with many secrets: a \texttt{.env} file plus \texttt{python-dotenv}.
+\note{
+}
 \end{frame}
 
 
@@ -316,6 +351,8 @@ headers = {
 \item The standard workaround is to encode the image into a Base64 string.
 \end{enumerate}
     \end{block}
+\note{
+}
 \end{frame}
 
 
@@ -334,6 +371,8 @@ encoded = base64.b64encode(buffer.getvalue()).decode("utf-8")
     \end{minted}
 
     Pillow makes it easy to open and resize. \texttt{base64.b64encode} turns the bytes into an ASCII string that fits inside JSON.
+\note{
+}
 \end{frame}
 
 
@@ -356,6 +395,8 @@ response = requests.post(url, headers=headers, json=body)
 
     The \texttt{data:image/jpeg;base64,} prefix follows the data URL scheme.
     Each provider has its own preferred way of carrying images.
+\note{
+}
 \end{frame}
 
 
@@ -376,6 +417,8 @@ response = requests.post(url, headers=headers, json=body)
     \end{figure}
 \end{minipage}
 
+\note{
+}
 \end{frame}
 
 
@@ -392,6 +435,8 @@ SSE is built on top of HTTP.
             \includegraphics[width=0.6\textwidth]{sse}
         \end{center}
     \end{figure}
+\note{
+}
 \end{frame}
 
 
@@ -403,6 +448,8 @@ SSE is built on top of HTTP.
 \item \textbf{Tell \texttt{requests} not to buffer.} Pass \texttt{stream=True} to the function so we can read chunks as they arrive.
 \end{enumerate}
 
+\note{
+}
 \end{frame}
 
 
@@ -423,6 +470,8 @@ for line in response.iter_lines():  # iterate incoming chunks
     delta = chunk["choices"][0]["delta"].get("content", "")
     print(delta, end="", flush=True)
     \end{minted}
+\note{
+}
 \end{frame}
 
 
@@ -444,6 +493,8 @@ for line in response.iter_lines():  # iterate incoming chunks
         \end{center}
     \end{figure}
 \end{minipage}
+\note{
+}
 \end{frame}
 
 
@@ -463,6 +514,8 @@ for line in response.iter_lines():  # iterate incoming chunks
             \item Handle common error cases gracefully
         \end{enumerate}
     \end{block}
+\note{
+}
 \end{frame}
 
 
@@ -474,6 +527,8 @@ for line in response.iter_lines():  # iterate incoming chunks
         \item Add a \texttt{-{}-image <path>} flag so the user can attach a local image to send to the AI model
         \item Replace the regular response handling with a streaming version that prints the reply word by word
     \end{enumerate}
+\note{
+}
 \end{frame}
 
 
@@ -486,6 +541,8 @@ for line in response.iter_lines():  # iterate incoming chunks
 
     \vspace{0.5em}
     In the next module, we will transition from API consumers to API producers.
+\note{
+}
 \end{frame}
 
 
@@ -500,6 +557,8 @@ for line in response.iter_lines():  # iterate incoming chunks
 {\small \faEnvelope\ \href{mailto:lyan@cs.aau.dk}{lyan@cs.aau.dk} \\
 \faGlobe\ \href{https://www.yanlincs.com}{www.yanlincs.com}}
 \end{center}
+\note{
+}
 \end{frame}
 
 \end{document}
