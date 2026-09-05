@@ -70,11 +70,13 @@
     \end{figure}
 \end{frame}
 
+
 \begin{frame}
 \tableofcontents[sectionstyle=show,
 subsectionstyle=show/shaded/hide,
 subsubsectionstyle=show/shaded/hide]
 \end{frame}
+
 
 
 \section{From Testing Tool to Python}
@@ -87,6 +89,7 @@ In Module A.1 we treated APIs as something to \textit{poke at through browsers a
     However, we do not usually ship software in the form of \textit{open Postman and click send}.
 Sooner or later, we want \textbf{our own programs to talk to APIs on their own}.
 \end{frame}
+
 
 \begin{frame}{Why \texttt{requests}}
     Python has a built-in HTTP module (\texttt{urllib}), and AI providers ship their own Python packages such as \texttt{openai} and \texttt{anthropic}.
@@ -108,6 +111,7 @@ Sooner or later, we want \textbf{our own programs to talk to APIs on their own}.
     Working with \texttt{requests} keeps the HTTP layer visible while still relatively intuitive for us.
 \end{frame}
 
+
 \begin{frame}[fragile]{Setup}
     \texttt{requests} is a third-party package.
     \begin{minted}{bash}
@@ -123,6 +127,7 @@ source .venv/bin/activate
 pip install requests
     \end{minted}
 \end{frame}
+
 
 
 \section{Sending HTTP Requests}
@@ -141,6 +146,7 @@ Recall the three parts of an HTTP request: request line (method, URL, and protoc
     Same building blocks as Postman, just expressed in Python.
 \end{frame}
 
+
 \begin{frame}[fragile]{Sending a \texttt{GET} request}
     \begin{minted}{python}
 import requests
@@ -157,6 +163,7 @@ print(response.status_code)
 print(response.json())
     \end{minted}
 \end{frame}
+
 
 \begin{frame}[fragile]{Sending a \texttt{POST} request}
     \begin{minted}{python}
@@ -177,6 +184,7 @@ response = requests.post(url, headers=headers, json=body)
 \end{frame}
 
 
+
 \section{Handling HTTP Responses}
 
 \begin{frame}[fragile]{The response object}
@@ -195,6 +203,7 @@ response.json()   # body parsed from JSON to a Python dict
     \end{minted}
 \end{frame}
 
+
 \begin{frame}[fragile]{Reading the response body}
     Once we parse the response body into a Python dict, the rest is normal Python.
     \begin{minted}{python}
@@ -209,6 +218,7 @@ print(result["choices"][0]["message"]["content"])
         \item Always check the provider's documentation for the exact shape
     \end{itemize}
 \end{frame}
+
 
 \begin{frame}{Error handling: two kinds of failure}
     So far we have assumed everything goes smoothly.
@@ -231,6 +241,7 @@ print(result["choices"][0]["message"]["content"])
     \end{block}
 \end{frame}
 
+
 \begin{frame}[fragile]{Putting it together}
     \begin{minted}{python}
 try:
@@ -252,6 +263,7 @@ For example, a timeout might be worth retrying, while a \texttt{401} from a bad 
 \end{frame}
 
 
+
 \section{Beyond the Basics}
 
 \begin{frame}{Three common patterns}
@@ -264,6 +276,7 @@ Good practices that we should consider when integrating AI API interaction into 
     \end{itemize}
 \end{frame}
 
+
 \begin{frame}[fragile]{Storing API keys in environment variables}
     \begin{block}{Why not hardcode API keys in code?}
 \begin{enumerate}
@@ -273,6 +286,7 @@ Good practices that we should consider when integrating AI API interaction into 
 \end{enumerate}
     \end{block}
 \end{frame}
+
 
 \begin{frame}[fragile]{Storing API keys in environment variables}
     \begin{block}{Write environment variables}
@@ -293,6 +307,7 @@ headers = {
     For projects with many secrets: a \texttt{.env} file plus \texttt{python-dotenv}.
 \end{frame}
 
+
 \begin{frame}[fragile]{Sending images in the request body}
     \begin{block}{What's special about fitting images in the body?}
 \begin{enumerate}
@@ -302,6 +317,7 @@ headers = {
 \end{enumerate}
     \end{block}
 \end{frame}
+
 
 \begin{frame}[fragile]{Encode images as strings}
     \begin{minted}{python}
@@ -319,6 +335,7 @@ encoded = base64.b64encode(buffer.getvalue()).decode("utf-8")
 
     Pillow makes it easy to open and resize. \texttt{base64.b64encode} turns the bytes into an ASCII string that fits inside JSON.
 \end{frame}
+
 
 \begin{frame}[fragile]{Putting the image in the body}
     \begin{minted}{python}
@@ -341,6 +358,7 @@ response = requests.post(url, headers=headers, json=body)
     Each provider has its own preferred way of carrying images.
 \end{frame}
 
+
 \begin{frame}{Streaming responses with SSE}
 \begin{minipage}[t]{0.47\textwidth}
 \begin{enumerate}
@@ -360,6 +378,7 @@ response = requests.post(url, headers=headers, json=body)
 
 \end{frame}
 
+
 \begin{frame}{Server-Sent Events (SSE)}
 SSE is built on top of HTTP.
 
@@ -375,6 +394,7 @@ SSE is built on top of HTTP.
     \end{figure}
 \end{frame}
 
+
 \begin{frame}{Enabling SSE with \texttt{requests}}
     To enable SSE with \texttt{requests}, we have to do two things.
 
@@ -384,6 +404,7 @@ SSE is built on top of HTTP.
 \end{enumerate}
 
 \end{frame}
+
 
 \begin{frame}[fragile]{Reading the response chunk by chunk}
     \begin{minted}{python}
@@ -403,6 +424,7 @@ for line in response.iter_lines():  # iterate incoming chunks
     print(delta, end="", flush=True)
     \end{minted}
 \end{frame}
+
 
 \begin{frame}{Other protocols for streaming}
 \begin{minipage}[t]{0.47\textwidth}
@@ -425,6 +447,7 @@ for line in response.iter_lines():  # iterate incoming chunks
 \end{frame}
 
 
+
 \section{Exercise}
 
 \begin{frame}{A command line chatbot}
@@ -442,6 +465,7 @@ for line in response.iter_lines():  # iterate incoming chunks
     \end{block}
 \end{frame}
 
+
 \begin{frame}{Extensions}
     Once the basic version works, try the following to deepen your understanding.
 
@@ -451,6 +475,7 @@ for line in response.iter_lines():  # iterate incoming chunks
         \item Replace the regular response handling with a streaming version that prints the reply word by word
     \end{enumerate}
 \end{frame}
+
 
 \begin{frame}{What you should walk away with}
     By the end of the exercise, you should be able to:
@@ -462,6 +487,7 @@ for line in response.iter_lines():  # iterate incoming chunks
     \vspace{0.5em}
     In the next module, we will transition from API consumers to API producers.
 \end{frame}
+
 
 
 \appendix
