@@ -23,7 +23,7 @@
 \institute{%
     \href{https://www.yanlincs.com}{www.yanlincs.com}
 }
-\date{September 1st, 2026}
+\date{September 14th, 2026}
 \usepackage{AAU}
 % \AtBeginSection{}  % Remove section title slides
 \AtBeginSubsection{}  % Remove subsection title slides
@@ -90,38 +90,78 @@ subsubsectionstyle=show/shaded/hide]
 
 
 
-\section{From Testing Tool to Python}
+\section{Warmup}
 
-\begin{frame}{Recap: where we are}
-In Module A.1 we treated APIs as something to \textit{poke at through browsers and API testing tools}.
-    Great for getting a feel for what HTTP traffic looks like.
+\begin{frame}{Recap}
+  \begin{block}{In module A.1}
+    \begin{itemize}
+      \item Poke at APIs through \textit{browsers and testing tools}
+      \item Great for getting a feel for what HTTP traffic looks like
+    \end{itemize}
 
-\vspace{0.5em}
-    However, we do not usually ship software in the form of \textit{open Postman and click send}.
-Sooner or later, we want \textbf{our own programs to talk to APIs on their own}.
+  \end{block}
+
+  \begin{block}{Moving forward}
+    \begin{itemize}
+      \item We do not ship software in the form of \textit{open Postman and click send}
+      \item We would want to \textbf{build programs that talk to APIs on their own}
+    \end{itemize}
+  \end{block}
 \note{
 }
 \end{frame}
 
 
-\begin{frame}{Why \texttt{requests}}
-    Python has a built-in HTTP module (\texttt{urllib}), and AI providers ship their own Python packages such as \texttt{openai} and \texttt{anthropic}.
+\begin{frame}{Talking to APIs in a Python program}
+  \textbf{Focus of this module:} The \texttt{requests} package in Python
 
-    \begin{block}{\texttt{urllib}}
-        Built in, but somewhat clunky and verbose.
-        Most Python developers reach for \texttt{requests} instead.
-    \end{block}
+  \begin{block}{What is \texttt{requests}?}
+    The de facto Python package for talking with HTTP APIs.
+  \end{block}
 
-    \begin{block}{Provider SDKs}
-        Yes for shipping production code, but not for learning.
-        \begin{itemize}
-            \item SDKs hide the HTTP details we just got familiar with
-            \item Errors use the SDK's own wording instead of HTTP terms
-            \item Switching providers feels like learning a brand new tool
-        \end{itemize}
-    \end{block}
+  \begin{block}{Why not alternatives?}
+    AI providers ship their own Python packages such as \texttt{openai} and \texttt{anthropic}.
+  \end{block}
+\end{frame}
 
-    Working with \texttt{requests} keeps the HTTP layer visible while still relatively intuitive for us.
+
+\begin{frame}[fragile]{Why not AI provider packages}
+    Good for shipping production code, bad for learning.
+    \begin{itemize}
+      \item SDKs \textit{hide the HTTP details} we want to get familiar with
+      \item HTTP details is generalizable knowledge that will come in handy when we \textbf{build our own AI systems}
+    \end{itemize}
+
+    \begin{minipage}[t]{0.45\textwidth}
+        With \texttt{openai}
+        \begin{minted}[fontsize=\scriptsize]{python}
+from openai import OpenAI
+client = OpenAI()
+response = client.chat.completions.create(
+    model="gpt-5.4-mini",
+    messages=[{"role": "user",
+               "content": "Hello!"}],
+)
+        \end{minted}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.52\textwidth}
+        With \texttt{requests}
+        \begin{minted}[fontsize=\scriptsize]{python}
+import requests
+response = requests.post(
+    "https://api.openai.com/v1/chat/completions",
+    headers={"Authorization": f"Bearer {key}",
+             "Content-Type": "application/json"},
+    json={"model": "gpt-5.4-mini",
+          "messages": [{"role": "user",
+                        "content": "Hello!"}]},
+)
+        \end{minted}
+    \end{minipage}
+
+    \hr
+    Working with \texttt{requests} keeps the HTTP details visible.
 \note{
 }
 \end{frame}
@@ -130,15 +170,6 @@ Sooner or later, we want \textbf{our own programs to talk to APIs on their own}.
 \begin{frame}[fragile]{Setup}
     \texttt{requests} is a third-party package.
     \begin{minted}{bash}
-pip install requests
-    \end{minted}
-
-    \vspace{0.5em}
-    \emphasis{Tip.} It is a good idea to install \texttt{requests} inside a virtual environment, instead of polluting your system-level Python.
-    Otherwise tracking down version conflicts later becomes a headache.
-    \begin{minted}{bash}
-python -m venv .venv
-source .venv/bin/activate
 pip install requests
     \end{minted}
 \note{
