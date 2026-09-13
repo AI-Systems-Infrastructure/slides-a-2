@@ -93,7 +93,7 @@ subsubsectionstyle=show/shaded/hide]
 \section{Warmup}
 
 \begin{frame}{Recap}
-  \begin{block}{In module A.1}
+  \begin{block}{In Module A.1}
     \begin{itemize}
       \item Poke at APIs through \textit{browsers and testing tools}
       \item Great for getting a feel for what HTTP traffic looks like
@@ -125,11 +125,11 @@ subsubsectionstyle=show/shaded/hide]
 \end{frame}
 
 
-\begin{frame}[fragile]{Why not AI provider packages}
+\begin{frame}[fragile]{Why not AI provider packages?}
     Good for shipping production code, bad for learning.
     \begin{itemize}
       \item SDKs \textit{hide the HTTP details} we want to get familiar with
-      \item HTTP details is generalizable knowledge that will come in handy when we \textbf{build our own AI systems}
+      \item HTTP details are generalizable knowledge that will come in handy when we \textbf{build our own AI systems}
     \end{itemize}
 
     \begin{minipage}[t]{0.45\textwidth}
@@ -178,9 +178,9 @@ pip install requests
 
 
 
-\section{Sending HTTP Request}
+\section{Sending HTTP Requests}
 
-\begin{frame}{Sending HTTP Request with \texttt{requests}}
+\begin{frame}{Sending HTTP Requests with \texttt{requests}}
   Recall the three parts of an \textbf{HTTP request:} request line (method, URL, and protocol version), headers, and body.
 
     \begin{itemize}
@@ -194,7 +194,7 @@ pip install requests
 \end{frame}
 
 
-\begin{frame}[fragile]{Sending HTTP Request with \texttt{requests}}{Example \texttt{GET} request}
+\begin{frame}[fragile]{Sending HTTP Requests with \texttt{requests}}{Example \texttt{GET} request}
     \begin{minted}{python}
 import requests
 
@@ -212,7 +212,7 @@ response = requests.get(url, headers=headers)
 \end{frame}
 
 
-\begin{frame}[fragile]{Sending HTTP Request with \texttt{requests}}{Example \texttt{POST} request}
+\begin{frame}[fragile]{Sending HTTP Requests with \texttt{requests}}{Example \texttt{POST} request}
     \begin{minted}{python}
 url = "https://api.openai.com/v1/chat/completions"
 headers = {
@@ -234,7 +234,7 @@ response = requests.post(url, headers=headers, json=body)
 
 
 
-\section{Handling HTTP Response}
+\section{Handling HTTP Responses}
 
 \begin{frame}[fragile]{The response object}
   The \texttt{response} object exposes all three parts of the \textbf{HTTP response} (i.e., status line, headers, and body).
@@ -277,17 +277,16 @@ print(result["choices"][0]["message"]["content"])
 
     \begin{block}{Network-level failures}
         \begin{itemize}
-          \item The request failed to reach the API provider (e.g., Connection refused, DNS error, timeout)
+          \item The request failed to reach the API provider (e.g., connection refused, DNS error, timeout)
           \item \texttt{requests} will raise exceptions from \texttt{requests.exceptions}
         \end{itemize}
     \end{block}
 
     \begin{block}{HTTP-level failures}
-        The request reaches the server, but the server responds with a \texttt{4xx} or \texttt{5xx} status code.
         \begin{itemize}
           \item The request reaches the server, but the server responds with a \texttt{4xx} or \texttt{5xx} status code
-          \item Check \texttt{response.status\_code} ourselves, or ...
-          \item No exception by default, we can call \texttt{response.raise\_for\_status()}
+          \item Check \texttt{response.status\_code} ourselves, or \dots
+          \item No exception by default; we can call \texttt{response.raise\_for\_status()}
         \end{itemize}
     \end{block}
 \note{
@@ -335,7 +334,7 @@ Good practices that we should consider when integrating AI API interaction into 
     \begin{block}{Why not hardcode API keys in code?}
 \begin{enumerate}
 \item API keys give whoever holds them access to your account and billing, so they should be \textbf{treated like passwords}
-\item \textit{Hardcoded keys leak}, since people may commit them to public repos, paste them in WhatsApp, screenshot them in tutorials
+\item \textit{Hardcoded keys leak}, since people may commit them to public repos, paste them in WhatsApp, or screenshot them in tutorials
 \item Bots scan public commits, and stolen keys can be \textit{running up bills} on your account within minutes
 \end{enumerate}
     \end{block}
@@ -365,7 +364,7 @@ headers = {
 
 
 \begin{frame}[fragile]{Storing API keys in environment variables}
-  For projects with many/long term secrets: a \texttt{.env} file plus \texttt{python-dotenv}.
+  For projects with many/long-term secrets: a \texttt{.env} file plus \texttt{python-dotenv}.
   \begin{block}{Write a \texttt{.env} file}
         \begin{minted}{text}
 OPENAI_API_KEY=sk-abc1234567890qwerty
@@ -444,8 +443,8 @@ response = requests.post(url, headers=headers, json=body)
 \begin{frame}{Streaming responses with SSE}
 \begin{minipage}[t]{0.47\textwidth}
 \begin{enumerate}
-\item Most AI apps stream response, i.e., the response appears word by word as the AI model generates it
-\item Stream make response feels more responsive; otherwise, a 30-second answer takes 30 seconds before the user sees anything
+\item Most AI apps stream responses, i.e., the response appears word by word as the AI model generates it
+\item Streaming makes responses feel more responsive; otherwise, a 30-second answer takes 30 seconds before the user sees anything
 \item This is achievable through the same APIs, using \emphasis{Server-Sent Events (SSE)} on top of HTTP
 \end{enumerate}
 \end{minipage}
